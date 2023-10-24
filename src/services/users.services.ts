@@ -1,47 +1,58 @@
-import Users from '~/models/schemas/User.schema'
+import User from '~/models/schemas/User.schema'
 import databaseService from './database.services'
+import { register } from 'module'
 import { RegisterReqBody } from '~/models/requests/User.request'
 import { hashPassword } from '~/utils/crypto'
 import { TokenType } from '~/constants/enums'
 import { signToken } from '~/utils/jwt'
 import { config } from 'dotenv'
 config()
-class UserServices {
-  private signAccessToken(user_id: string) {
-    return signToken({
-      payload: { user_id, token_type: TokenType.AccessToken },
-      options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE_IN }
-    })
+class UserService {
+  async checkEmailExist(email: string) {
+    const user = await databaseService.user.findOne({ email })
+    return Boolean(user)
   }
-  private signRefreshToken(user_id: string) {
-    return signToken({
-      payload: { user_id, token_type: TokenType.RefreshToken },
-      options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN }
-    })
-  }
-
   async register(payload: RegisterReqBody) {
     const result = await databaseService.user.insertOne(
-      new Users({
+      new User({
         ...payload,
         date_of_birth: new Date(payload.date_of_birth),
         password: hashPassword(payload.password)
       })
     )
-    // Lấy user_id từ account vừa tạo
+    //lấy user_id từ user mới tạo
     const user_id = result.insertedId.toString()
-    // Từ user_id tạo ra 1 access token và 1 refresh token
-    const [access_token, refresh_token] = await Promise.all([
-      this.signAccessToken(user_id),
-      this.signRefreshToken(user_id)
-    ])
-    return { access_token, refresh_token }
+    const [AccessToken, RefreshToken] = await this.signAccessTokenRefreshToken(user_id)
+    return [AccessToken, RefreshToken]
   }
-  async checkEmailExist(email: string) {
-    //Vào database tìm user có email này
-    const user = await databaseService.user.findOne({ email })
-    return Boolean(user)
+
+  //Viết hàm nhận vào userID để bỏ vào payload tạo access token
+  signAccessToken(user_id: string) {
+    return signToken({
+      payload: { user_id, token_type: TokenType.AccessToken },
+      options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE_IN }
+    })
+  }
+  private signAccessTokenRefreshToken(user_id: string) {
+    return Promise.all([this.signAccessToken(user_id), this.signRefershToken(user_id)])
+  }
+
+  //Viết hàm nhận vào userID để bỏ vào payload tạo refresh token
+
+  signRefershToken(user_id: string) {
+    return signToken({
+      payload: { user_id, token_type: TokenType.AccessToken },
+      options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN }
+    })
+  }
+  async login(user_id: string) {
+    const [AccessToken, RefreshToken] = await this.signAccessTokenRefreshToken(user_id)
+    return [AccessToken, RefreshToken]
+    //dùng cái user_id tạo access và refresh token
+    //return cái access token và refresh token cho controller
+    //controller sẽ trả về cho client
   }
 }
-const userServices = new UserServices()
-export default userServices
+
+const userService = new UserService()
+export default userService

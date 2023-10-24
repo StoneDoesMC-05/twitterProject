@@ -1,17 +1,33 @@
-import express from 'express'
-import { body, validationResult, ValidationChain } from 'express-validator'
+import { Request, Response, NextFunction } from 'express'
+import { validationResult, ValidationChain } from 'express-validator'
 import { RunnableValidationChains } from 'express-validator/src/middlewares/schema'
-// can be reused by many routes
+import HTTP_STATUS from '~/constants/httpStatus'
+import { ErrorWithStatus, EntityError } from '~/models/Errors'
 
-// sequential processing, stops running validations chain if the previous one fails.
-export const validate = (validations: RunnableValidationChains<ValidationChain>) => {
-  return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    await validations.run(req)
+export const validate = (validation: RunnableValidationChains<ValidationChain>) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    await validation.run(req)
+
     const errors = validationResult(req)
+
     if (errors.isEmpty()) {
       return next()
     }
 
-    res.status(400).json({ errors: errors.mapped() })
+    const errorObjects = errors.mapped()
+    const entityError = new EntityError({ errors: {} })
+
+    for (const key in errorObjects) {
+      //Đi qua từng lỗi và lấy msg
+      const { msg } = errorObjects[key]
+      // Nếu lỗi đặc biệt do mình tao ra khác 422 thì mình next cho defaultErrorHandler
+      if (msg instanceof ErrorWithStatus && msg.status !== HTTP_STATUS.UNPROCESSABLE_ENTITY) {
+        return next(msg)
+      }
+      // Nếu không phải lỗi đặc biệt thì mình chắc chắn là lỗi 422
+      // thì mình lưu vào entityError
+      entityError.errors[key] = msg
+    }
+    next(entityError)
   }
 }
