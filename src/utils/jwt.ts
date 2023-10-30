@@ -7,11 +7,12 @@ config()
 //privateKey là password để được quyền tạo chữ ký jwt
 export const signToken = ({
   payload,
-  privateKey = process.env.JWT_SECRET as string,
+  //privateKey = process.env.JWT_SECRET as string,
+  privateKey,
   options = { algorithm: 'HS256' }
 }: {
-  payload: string | object | Buffer
-  privateKey?: string
+  payload: object | string | Buffer
+  privateKey: string
   options?: jwt.SignOptions
 }) => {
   return new Promise<string>((resolve, reject) => {
@@ -24,10 +25,11 @@ export const signToken = ({
 // Hàm kiểm tra token có phải của mình tạo ra không, nếu có thì trả ra payload
 export const verifyToken = ({
   token,
-  secretOrPublicKey = process.env.JWT_SECRET as string
+  //secretOrPublicKey = process.env.JWT_SECRET as string
+  secretOrPublicKey
 }: {
   token: string
-  secretOrPublicKey?: string
+  secretOrPublicKey: string
 }) => {
   //trả về JwtPayload(thông tin người gữi req) nếu token hợp lệ
   return new Promise<TokenPayload>((resolve, reject) => {

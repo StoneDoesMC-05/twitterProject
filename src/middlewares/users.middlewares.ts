@@ -195,10 +195,6 @@ export const accessTokenValidator = validate(
     {
       Authorization: {
         trim: true,
-        notEmpty: {
-          //kiểm tra có gữi lên không
-          errorMessage: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
-        },
         custom: {
           //value là giá trị của Authorization, req là req của client gữi lên server
           options: async (value: string, { req }) => {
@@ -217,7 +213,10 @@ export const accessTokenValidator = validate(
             //kiểm tra xem access_token có hợp lệ hay không
             //ở đây mình trycath để tạo ra lỗi có status khác 422, nếu k thì khi phát sinh lỗi sẽ là 422
             try {
-              const decoded_authorization = await verifyToken({ token: access_token })
+              const decoded_authorization = await verifyToken({
+                token: access_token,
+                secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
+              })
               //nếu không có lỗi thì ta lưu decoded_authorization vào req để khi nào muốn biết ai gữi req thì dùng
               ;(req as Request).decoded_authorization = decoded_authorization
             } catch (error) {
@@ -241,17 +240,23 @@ export const refreshTokenValidator = validate(
   checkSchema(
     {
       refresh_token: {
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED
-        },
-
+        trim: true, //thêm
         custom: {
           options: async (value: string, { req }) => {
+            if (!value) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED,
+                status: HTTP_STATUS.UNAUTHORIZED //401
+              })
+            }
             try {
               // const decoded_refresh_token = await verifyToken({ token: value }) //không dùng nữa
               //thay thành: vừa verify vừa tìm trong db xem có refresh_token này không
               const [decoded_refresh_token, refresh_token] = await Promise.all([
-                verifyToken({ token: value }),
+                verifyToken({
+                  token: value,
+                  secretOrPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN as string
+                }),
                 databaseService.refreshTokens.findOne({ token: value })
               ])
               //nếu không có refresh_token này trong db thì ta sẽ throw error

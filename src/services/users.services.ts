@@ -35,22 +35,24 @@ class UserService {
   }
 
   //Viết hàm nhận vào userID để bỏ vào payload tạo access token
-  signAccessToken(user_id: string) {
+  private signAccessToken(user_id: string) {
     return signToken({
       payload: { user_id, token_type: TokenType.AccessToken },
-      options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE_IN }
+      options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE_IN },
+      privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string //thêm
     })
   }
   private signAccessTokenRefreshToken(user_id: string) {
-    return Promise.all([this.signAccessToken(user_id), this.signRefershToken(user_id)])
+    return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
   }
 
   //Viết hàm nhận vào userID để bỏ vào payload tạo refresh token
 
-  signRefershToken(user_id: string) {
+  private signRefreshToken(user_id: string) {
     return signToken({
-      payload: { user_id, token_type: TokenType.AccessToken },
-      options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN }
+      payload: { user_id, token_type: TokenType.RefreshToken },
+      options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN },
+      privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string //thêm
     })
   }
   async login(user_id: string) {
@@ -66,7 +68,7 @@ class UserService {
   async logout(refresh_token: string) {
     await databaseService.refreshTokens.deleteOne({ token: refresh_token })
     return {
-      message: USERS_MESSAGES.LOGIN_SUCCESSFULLY
+      message: USERS_MESSAGES.LOGOUT_SUCCESS
     }
   }
 }
