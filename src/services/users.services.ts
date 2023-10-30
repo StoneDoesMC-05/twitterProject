@@ -6,6 +6,9 @@ import { hashPassword } from '~/utils/crypto'
 import { TokenType } from '~/constants/enums'
 import { signToken } from '~/utils/jwt'
 import { config } from 'dotenv'
+import { ObjectId } from 'mongodb'
+import RefreshToken from '~/models/schemas/RefreshToken.schema'
+import { USERS_MESSAGES } from '~/constants/messages'
 config()
 class UserService {
   async checkEmailExist(email: string) {
@@ -22,8 +25,13 @@ class UserService {
     )
     //lấy user_id từ user mới tạo
     const user_id = result.insertedId.toString()
-    const [AccessToken, RefreshToken] = await this.signAccessTokenRefreshToken(user_id)
-    return [AccessToken, RefreshToken]
+    const [access_token, refresh_token] = await this.signAccessTokenRefreshToken(user_id)
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
+    )
+    //user_id ta có là string, mà trong database thì user_id là ObjectId
+    //nên ta không truyền là user_id: user_id, mà là user_id: new ObjectId(user_id)
+    return { access_token, refresh_token }
   }
 
   //Viết hàm nhận vào userID để bỏ vào payload tạo access token
@@ -46,11 +54,20 @@ class UserService {
     })
   }
   async login(user_id: string) {
-    const [AccessToken, RefreshToken] = await this.signAccessTokenRefreshToken(user_id)
-    return [AccessToken, RefreshToken]
+    const [access_token, refresh_token] = await this.signAccessTokenRefreshToken(user_id)
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
+    )
+    return { access_token, refresh_token }
     //dùng cái user_id tạo access và refresh token
     //return cái access token và refresh token cho controller
     //controller sẽ trả về cho client
+  }
+  async logout(refresh_token: string) {
+    await databaseService.refreshTokens.deleteOne({ token: refresh_token })
+    return {
+      message: USERS_MESSAGES.LOGIN_SUCCESSFULLY
+    }
   }
 }
 
