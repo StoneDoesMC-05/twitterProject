@@ -1,21 +1,24 @@
 import express, { Request, Response, NextFunction } from 'express'
-import usersRouter from './routes/users.routes'
+import userRouter from './routes/users.routes'
 import databaseService from './services/database.services'
 import { defaultErrorHandler } from './middlewares/error.middlewares'
 const app = express()
 const PORT = 3000
-databaseService.connect()
+
+databaseService.conect()
+
 app.use(express.json())
+
 app.get('/', (req, res) => {
-  res.send('hello world')
+  res.send('xin chao')
 })
 
-app.use('/users', usersRouter)
-//localHost:3000/api/tweets
+app.use('/users', userRouter)
+//http://localhost:3000/users/tweets
 
-//App sử dụng một error handler tổng
+// app sử dung 1 middleware 1 erorhandler tổng
 app.use(defaultErrorHandler)
 
 app.listen(PORT, () => {
-  console.log(`Server này đang chạy trên post ${PORT}`)
+  console.log(`Project twitter này đang chạy trên post ${PORT}`)
 })

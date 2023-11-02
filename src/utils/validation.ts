@@ -1,33 +1,29 @@
-import { Request, Response, NextFunction } from 'express'
-import { validationResult, ValidationChain } from 'express-validator'
+import express from 'express'
+import { body, validationResult, ValidationChain } from 'express-validator'
 import { RunnableValidationChains } from 'express-validator/src/middlewares/schema'
 import HTTP_STATUS from '~/constants/httpStatus'
-import { ErrorWithStatus, EntityError } from '~/models/Errors'
+import { EntityError, ErrorWithStatus } from '~/models/Errors'
+// can be reused by many routes
 
-export const validate = (validation: RunnableValidationChains<ValidationChain>) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    await validation.run(req)
-
+// sequential processing, stops running validations chain if the previous one fails.
+export const validate = (validations: RunnableValidationChains<ValidationChain>) => {
+  return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    await validations.run(req)
     const errors = validationResult(req)
-
     if (errors.isEmpty()) {
       return next()
     }
-
-    const errorObjects = errors.mapped()
+    const errorObject = errors.mapped() //hàm này giúp ta lấy lỗi ra dưới dạng object
     const entityError = new EntityError({ errors: {} })
-
-    for (const key in errorObjects) {
-      //Đi qua từng lỗi và lấy msg
-      const { msg } = errorObjects[key]
-      // Nếu lỗi đặc biệt do mình tao ra khác 422 thì mình next cho defaultErrorHandler
+    for (const key in errorObject) {
+      const { msg } = errorObject[key] // di qua tung loi va lay msg ra xem
       if (msg instanceof ErrorWithStatus && msg.status !== HTTP_STATUS.UNPROCESSABLE_ENTITY) {
         return next(msg)
       }
-      // Nếu không phải lỗi đặc biệt thì mình chắc chắn là lỗi 422
-      // thì mình lưu vào entityError
+      // neu ko pai loix dac biet thi minh luu vao entityError
       entityError.errors[key] = msg
     }
+    // sau khi duyet xong thi nem cho defaultError handler xu ly
     next(entityError)
   }
 }

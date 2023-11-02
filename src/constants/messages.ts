@@ -1,3 +1,6 @@
+export const USER_MESSAGE = {
+  VALIDATION_ERROR: 'validation Error'
+} as const
 export const USERS_MESSAGES = {
   VALIDATION_ERROR: 'Validation error',
   //name
@@ -25,12 +28,12 @@ export const USERS_MESSAGES = {
   DATE_OF_BIRTH_BE_ISO8601: 'Date of birth must be ISO8601',
   //user
   EMAIL_OR_PASSWORD_IS_INCORRECT: 'Email or password is incorrect',
-  LOGIN_SUCCESSFULLY: 'Login successfully',
-  REGISTER_SUCCESSFULLY: 'Register successfully',
+  LOGIN_SUCCESS: 'Login success',
+  REGISTER_SUCCESS: 'Register success',
   ACCESS_TOKEN_IS_REQUIRED: 'Access token is required',
   REFRESH_TOKEN_IS_REQUIRED: 'Refresh token is required',
   REFRESH_TOKEN_IS_INVALID: 'Refresh token is invalid',
-  USED_REFRESH_TOKEN_OR_NOT_EXIST: 'Used refresh token or not exist',
+  USED_REFRESH_TOKEN_OR_NOT_EXIST: 'Used refesh token or not exist',
   LOGOUT_SUCCESS: 'Logout success',
   EMAIL_VERIFY_TOKEN_IS_REQUIRED: 'Email verify token is required',
   USER_NOT_FOUND: 'User not found',
@@ -38,7 +41,11 @@ export const USERS_MESSAGES = {
   EMAIL_VERIFY_SUCCESS: 'Email verify success',
   RESEND_VERIFY_EMAIL_SUCCESS: 'Resend verify email success',
   CHECK_EMAIL_TO_RESET_PASSWORD: 'Check email to reset password',
-  VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS: 'Verify forgot password token success',
   FORGOT_PASSWORD_TOKEN_IS_REQUIRED: 'Forgot password token is required',
-  INVALID_FORGOT_PASSWORD_TOKEN: 'Invalid forgot password token'
+  VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS: 'Verify forgot password token success',
+  USER_BANNED: 'User Banned',
+  EMAIL_VERIFY_TOKEN_IS_INCORRECT: 'Email verify token is incorrect',
+  FORGOT_PASSWORD_TOKEN_IS_INCORRECT: 'Forgot password token is incorrect',
+  RESET_PASSWORD_SUCCESS: 'Reset password success',
+  FORGOT_PASSWORD_TOKEN_IS_INVALID: 'Forgot password token is invalid'
 } as const

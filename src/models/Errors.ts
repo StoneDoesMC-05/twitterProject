@@ -1,13 +1,14 @@
 import HTTP_STATUS from '~/constants/httpStatus'
-import { USERS_MESSAGES } from '~/constants/messages'
-type ErrorType = Record<
+import { USER_MESSAGE } from '~/constants/messages'
+type ErrorsType = Record<
   string,
   {
     msg: string
     [key: string]: any
   }
 >
-// Tạo ra class chuyên dùng để tạo ra lỗi có status rõ ràng
+// luu dinh nghia cua 1 loi
+// tạo ra class chuyên dùng để tạo ra lỗi có status rõ ràng
 export class ErrorWithStatus {
   message: string
   status: number
@@ -17,8 +18,8 @@ export class ErrorWithStatus {
   }
 }
 export class EntityError extends ErrorWithStatus {
-  errors: ErrorType
-  constructor({ message = USERS_MESSAGES.VALIDATION_ERROR, errors }: { message?: string; errors: ErrorType }){
+  errors: ErrorsType
+  constructor({ message = USER_MESSAGE.VALIDATION_ERROR, errors }: { message?: string; errors: ErrorsType }) {
     super({ message, status: HTTP_STATUS.UNPROCESSABLE_ENTITY })
     this.errors = errors
   }
